@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: #1f2937;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+        }
+
+        .test-section h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        .file-input {
+            display: none !important;
+        }
+
+        .dropzone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 32px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+            position: relative;
+        }
+
+        .dropzone:hover {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .dropzone-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .dropzone-icon {
+            font-size: 32px;
+            color: #6366f1;
+        }
+
+        .dropzone-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .preview {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .preview.active {
+            display: block;
+        }
+
+        .preview img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #0c2340;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 文件上传功能测试</h1>
+
+        <div class="test-section">
+            <h2>测试 1: 基础文件选择</h2>
+            <div class="dropzone" id="test1-dropzone">
+                <input type="file" id="test1-input" accept="image/*" class="file-input">
+                <div class="dropzone-content">
+                    <span class="dropzone-icon">+</span>
+                    <p class="dropzone-text">点击或拖拽选择文件</p>
+                </div>
+            </div>
+            <div id="test1-preview" class="preview"></div>
+            <div id="test1-status" class="status info" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试 2: 拖拽上传</h2>
+            <div class="dropzone" id="test2-dropzone">
+                <input type="file" id="test2-input" accept="image/*" class="file-input">
+                <div class="dropzone-content">
+                    <span class="dropzone-icon">📸</span>
+                    <p class="dropzone-text">拖拽图像到这里</p>
+                </div>
+            </div>
+            <div id="test2-preview" class="preview"></div>
+            <div id="test2-status" class="status info" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试 3: 多个文件</h2>
+            <div class="dropzone" id="test3-dropzone">
+                <input type="file" id="test3-input" accept="image/*" multiple class="file-input">
+                <div class="dropzone-content">
+                    <span class="dropzone-icon">🖼️</span>
+                    <p class="dropzone-text">选择多个文件</p>
+                </div>
+            </div>
+            <div id="test3-preview" class="preview"></div>
+            <div id="test3-status" class="status info" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 测试 1: 基础文件选择
+        setupTest('test1');
+        
+        // 测试 2: 拖拽上传
+        setupTest('test2');
+        
+        // 测试 3: 多个文件
+        setupTest('test3');
+
+        function setupTest(testId) {
+            const dropzone = document.getElementById(`${testId}-dropzone`);
+            const input = document.getElementById(`${testId}-input`);
+            const preview = document.getElementById(`${testId}-preview`);
+            const status = document.getElementById(`${testId}-status`);
+
+            if (!dropzone || !input) {
+                console.error(`Test ${testId} elements not found`);
+                return;
+            }
+
+            // 点击事件
+            dropzone.addEventListener('click', (e) => {
+                console.log(`${testId}: Click event triggered`);
+                e.preventDefault();
+                e.stopPropagation();
+                input.click();
+            });
+
+            // 文件选择事件
+            input.addEventListener('change', (e) => {
+                console.log(`${testId}: File selected`, e.target.files);
+                handleFiles(e.target.files, testId, preview, status);
+            });
+
+            // 拖拽事件
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.style.borderColor = '#6366f1';
+                dropzone.style.background = 'rgba(99, 102, 241, 0.05)';
+            });
+
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.style.borderColor = '#e5e7eb';
+                dropzone.style.background = '#f9fafb';
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log(`${testId}: Drop event triggered`, e.dataTransfer.files);
+                dropzone.style.borderColor = '#e5e7eb';
+                dropzone.style.background = '#f9fafb';
+                handleFiles(e.dataTransfer.files, testId, preview, status);
+            });
+        }
+
+        function handleFiles(files, testId, preview, status) {
+            if (files.length === 0) {
+                showStatus(status, '未选择文件', 'error');
+                return;
+            }
+
+            const file = files[0];
+            console.log(`${testId}: Processing file:`, file.name, file.size, file.type);
+
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                showStatus(status, '❌ 请选择图像文件', 'error');
+                return;
+            }
+
+            // 验证文件大小
+            if (file.size > 50 * 1024 * 1024) {
+                showStatus(status, '❌ 文件过大（最大 50MB）', 'error');
+                return;
+            }
+
+            // 读取文件
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.innerHTML = `<img src="${e.target.result}" alt="预览">`;
+                preview.classList.add('active');
+                showStatus(status, `✅ 已加载: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`, 'success');
+            };
+            reader.onerror = () => {
+                showStatus(status, '❌ 文件读取失败', 'error');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+

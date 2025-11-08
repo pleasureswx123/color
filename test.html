@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜色校正系统</title>
+    <link rel="stylesheet" href="static/style.css?v=20251107">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>颜色校正系统</h1>
+                    <p>通过 ColorChecker 色卡进行精确的颜色校正</p>
+                </div>
+                <div class="header-icon">⏱️</div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 步骤 1: 上传图像 -->
+            <section class="step-card">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-info">
+                        <h2 class="step-title">上传图像</h2>
+                        <p class="step-desc">上传包含 ColorChecker 色卡的校准图像和需要校正的目标图像</p>
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="upload-grid">
+                        <!-- 校准图像 -->
+                        <div class="upload-item">
+                            <div class="upload-label">
+                                <span class="upload-icon">📸</span>
+                                <span class="upload-title">校准图像</span>
+                            </div>
+                            <p class="upload-hint">包含 ColorChecker 24 色卡的照片</p>
+                            <div class="dropzone" id="calibration-dropzone">
+                                <input type="file" id="calibration-input" accept="image/*" class="file-input">
+                                <div class="dropzone-content">
+                                    <span class="dropzone-icon">+</span>
+                                    <p class="dropzone-text">点击或拖拽上传</p>
+                                </div>
+                            </div>
+                            <div id="calibration-preview" class="preview-container"></div>
+                        </div>
+
+                        <!-- 目标图像 -->
+                        <div class="upload-item">
+                            <div class="upload-label">
+                                <span class="upload-icon">🎯</span>
+                                <span class="upload-title">目标图像</span>
+                            </div>
+                            <p class="upload-hint">需要校正的照片</p>
+                            <div class="dropzone" id="target-dropzone">
+                                <input type="file" id="target-input" accept="image/*" class="file-input">
+                                <div class="dropzone-content">
+                                    <span class="dropzone-icon">+</span>
+                                    <p class="dropzone-text">点击或拖拽上传</p>
+                                </div>
+                            </div>
+                            <div id="target-preview" class="preview-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 步骤 2: 校正设置 -->
+            <section class="step-card" id="settings-card">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-info">
+                        <h2 class="step-title">校正设置</h2>
+                        <p class="step-desc">选择校正方法和质量等级</p>
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="settings-grid">
+                        <!-- 校正方法 -->
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                <span class="setting-icon">🎨</span>
+                                <span>校正方法</span>
+                            </label>
+                            <select id="method-select" class="select-input">
+                                <option value="polynomial">多项式 (Polynomial)</option>
+                                <option value="lut_3d">3D查找表 (LUT 3D)</option>
+                                <option value="direct_mapping">直接映射 (Direct Mapping)</option>
+                            </select>
+                            <p class="setting-hint">推荐使用多项式方法，适用于大多数场景</p>
+                        </div>
+
+                        <!-- 质量等级 -->
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                <span class="setting-icon">⭐</span>
+                                <span>质量等级</span>
+                            </label>
+                            <select id="quality-select" class="select-input">
+                                <option value="fast">快速</option>
+                                <option value="balanced" selected>平衡</option>
+                                <option value="high">高质量</option>
+                            </select>
+                            <p class="setting-hint">平衡模式兼顾速度和质量</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 步骤 3: 执行校正 -->
+            <section class="step-card" id="action-card">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-info">
+                        <h2 class="step-title">执行校正</h2>
+                        <p class="step-desc">检测色卡并开始颜色校正</p>
+                    </div>
+                </div>
+                <div class="step-content">
+                    <div class="action-buttons">
+                        <button id="detect-btn" class="btn btn-secondary" disabled>
+                            <span class="btn-icon">🔍</span>
+                            <span>检测色卡</span>
+                        </button>
+                        <button id="correct-btn" class="btn btn-primary btn-large" disabled>
+                            <span class="btn-icon">✨</span>
+                            <span>开始校正</span>
+                        </button>
+                    </div>
+
+                    <!-- 进度条 -->
+                    <div id="progress-container" class="progress-container" style="display: none;">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <p id="progress-text" class="progress-text">处理中...</p>
+                    </div>
+
+                    <!-- 状态信息 -->
+                    <div id="status-info" class="status-info"></div>
+                </div>
+            </section>
+
+            <!-- 步骤 4: 查看结果 -->
+            <section class="step-card" id="results-card" style="display: none;">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-info">
+                        <h2 class="step-title">校正结果</h2>
+                        <p class="step-desc">查看校正前后的对比效果</p>
+                    </div>
+                </div>
+                <div class="step-content">
+                    <!-- 图像对比 -->
+                    <div class="comparison-container">
+                        <div class="image-box">
+                            <h4 class="image-title">原始图像</h4>
+                            <img id="original-img" src="" alt="原始图像" class="result-image">
+                        </div>
+                        <div class="image-box">
+                            <h4 class="image-title">校正后的图像</h4>
+                            <img id="corrected-img" src="" alt="校正后的图像" class="result-image">
+                        </div>
+                    </div>
+
+                    <!-- 指标显示 -->
+                    <div id="metrics-container" class="metrics-container">
+                        <h4 class="metrics-title">颜色差异指标 (Delta E)</h4>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <span class="metric-label">平均值</span>
+                                <span id="delta-e-avg" class="metric-value">-</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">最大值</span>
+                                <span id="delta-e-max" class="metric-value">-</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">最小值</span>
+                                <span id="delta-e-min" class="metric-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="result-buttons">
+                        <button id="download-btn" class="btn btn-success">
+                            <span class="btn-icon">💾</span>
+                            <span>下载校正图像</span>
+                        </button>
+                        <button id="compare-btn" class="btn btn-info">
+                            <span class="btn-icon">🔄</span>
+                            <span>生成对比图像</span>
+                        </button>
+                        <button id="reset-btn" class="btn btn-secondary">
+                            <span class="btn-icon">🔄</span>
+                            <span>重新开始</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="static/app.js?v=20251107"></script>
+</body>
+</html>
+
